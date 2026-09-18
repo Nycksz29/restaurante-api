@@ -12,13 +12,13 @@ app.use(express.json())
 app.use(cors())
 
 app.get("/",(req,res)=>{
-  res.json({
-    mensagem:"API funcionando"
-  })
+res.json({
+mensagem:"API funcionando"
+})
 })
 
 app.get("/produtos", async (req, res)=>{
-  try {
+try {
     const [produtos] = await db.query(
       "select * from produto"
     )

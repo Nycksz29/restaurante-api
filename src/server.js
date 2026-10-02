@@ -3,10 +3,15 @@ const express = require("express")
 const cors = require("cors")
 const db = require("./config/database")
 
+const jwt = require("jsonwebtoken")
+
+const auth = require("./middleware/auth")
+
 
 const app = express()
 
 const PORT = 3001
+
 
 app.use(express.json())
 app.use(cors())
@@ -17,10 +22,57 @@ mensagem:"API funcionando"
 })
 })
 
-app.get("/produtos", async (req, res)=>{
+app.post("login",async(req,res)=>{
+    
+    const {email} = req.body
+
+    try {
+        const [usuarios] = await db.query(
+            "SELECT * FROM usuario WHERE email = ?",
+            [email]
+        )
+
+        if(usuarios.length == 0){
+            return res.status(401).json({
+                mensagem: "Email ou senha invalidos"
+            })
+        }
+
+        const usuario = usuarios[0]
+
+        if(usuario.senha !== senha){
+            return res.status(401).json({
+                mensagem:"Email ou senha invalidos"
+            })
+        }
+
+        const token = jwt.sign(
+            {
+                id: usuario.id,
+                email: usuario.email
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: '1h'
+            }
+        )
+
+        res.json({
+            token
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            mensagem:"Erro no login"
+        })
+
+    }
+})
+
+app.get("/produtos", auth, async (req, res)=>{
 try {
     const [produtos] = await db.query(
-      "select * from produto"
+      "SELECT * from produto"
     )
     res.json(produtos)
   } catch (error) {
